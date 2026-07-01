@@ -7,7 +7,7 @@ public class Usuario : Entity<Guid>
 {
     public string Nombre { get; private set; } = string.Empty;
     public string Apellido { get; private set; } = string.Empty;
-    public Email Email { get; private set; } = null!;
+    public Email Email { get; private set; }
 
     // Requerido por EF Core
     private Usuario() { }
@@ -23,7 +23,7 @@ public class Usuario : Entity<Guid>
         Id = id;
         Nombre = nombre;
         Apellido = apellido;
-        Email = email ?? throw new ArgumentNullException(nameof(email));
+        Email = email;
     }
 
     public void UpdateProfile(string nombre, string apellido, Email email)
@@ -36,6 +36,6 @@ public class Usuario : Entity<Guid>
 
         Nombre = nombre;
         Apellido = apellido;
-        Email = email ?? throw new ArgumentNullException(nameof(email));
+        Email = email;
     }
 }

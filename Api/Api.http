@@ -4,3 +4,19 @@ GET {{Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# Obtener todos los usuarios (incluye los generados por Bogus)
+GET {{Api_HostAddress}}/api/usuarios
+Accept: application/json
+
+###
+
+# Crear un nuevo usuario manualmente
+POST {{Api_HostAddress}}/api/usuarios
+Content-Type: application/json
+
+{
+  "nombre": "Elkin",
+  "apellido": "Castillo",
+  "email": "elkin.castillo@example.com"
+}

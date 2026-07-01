@@ -82,47 +82,14 @@ Api/
 Contiene las reglas del negocio, entidades, objetos de valor y excepciones de dominio. **No debe depender de EF Core, MediatR, ni ninguna librería de infraestructura.**
 
 ### 3.1. Clases Base
-#### Objeto de Valor (`ValueObject.cs`)
-Un Objeto de Valor se define por sus propiedades (igualdad estructural) y es inmutable.
-```csharp
-// Domain/Common/ValueObject.cs
-namespace Api.Domain.Common;
+#### Objetos de Valor (con Vogen)
+Para evitar la Primitive Obsession y mantener la inmutabilidad e integridad estructural sin necesidad de escribir código repetitivo (boilerplate), utilizamos la librería **Vogen**. Vogen genera automáticamente los métodos de igualdad, hash code y operadores correspondientes a partir de una estructura parcial decorada con el atributo `[ValueObject<T>]`. 
 
-public abstract class ValueObject
-{
-    protected abstract IEnumerable<object> GetEqualityComponents();
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null || obj.GetType() != GetType())
-            return false;
-
-        var other = (ValueObject)obj;
-        return GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
-    }
-
-    public override int GetHashCode()
-    {
-        return GetEqualityComponents()
-            .Select(x => x != null ? x.GetHashCode() : 0)
-            .Aggregate((x, y) => x ^ y);
-    }
-
-    public static bool operator ==(ValueObject? left, ValueObject? right)
-    {
-        if (ReferenceEquals(left, null) ^ ReferenceEquals(right, null))
-            return false;
-        return ReferenceEquals(left, null) || left.Equals(right);
-    }
-
-    public static bool operator !=(ValueObject? left, ValueObject? right)
-    {
-        return !(left == right);
-    }
-}
-```
+Por lo tanto, **no se requiere una clase base manual para los objetos de valor.**
 
 #### Entidad Base (`Entity.cs`)
+La clase base para las entidades no contiene objetos de valor manuales y se enfoca en indicar cambios reutilizables a través de la gestión de **Eventos de Dominio (Domain Events)**:
+
 ```csharp
 // Domain/Common/Entity.cs
 namespace Api.Domain.Common;
@@ -130,39 +97,45 @@ namespace Api.Domain.Common;
 public abstract class Entity<TId>
 {
     public TId Id { get; protected set; } = default!;
+
+    private readonly List<object> _domainEvents = new();
+
+    public IReadOnlyCollection<object> DomainEvents => _domainEvents.AsReadOnly();
+
+    protected void AddDomainEvent(object domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
+    }
 }
 ```
 
 ### 3.2. Implementación de Objeto de Valor (`Sku.cs`)
+Utilizando Vogen, el objeto de valor `Sku` se define como un `partial struct` y se le añade una validación personalizada mediante el método estático privado `Validate`.
+
 ```csharp
 // Domain/ValueObjects/Sku.cs
-using Api.Domain.Common;
+using Vogen;
 
 namespace Api.Domain.ValueObjects;
 
-public class Sku : ValueObject
+[ValueObject<string>]
+public partial struct Sku
 {
     private const int DefaultLength = 15;
-    public string Value { get; }
 
-    private Sku(string value)
-    {
-        Value = value;
-    }
-
-    public static Sku? Create(string value)
+    private static Validation Validate(string value)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Length != DefaultLength)
         {
-            return null; // O lanzar una excepción de dominio
+            return Validation.Invalid($"El SKU debe tener exactamente {DefaultLength} caracteres.");
         }
 
-        return new Sku(value);
-    }
-
-    protected override IEnumerable<object> GetEqualityComponents()
-    {
-        yield return Value;
+        return Validation.Ok;
     }
 }
 ```
@@ -489,12 +462,12 @@ Para implementar esta arquitectura, asegúrese de agregar los siguientes paquete
 ### 9.1. Capa de Dominio (Domain)
 Se han estructurado los bloques fundamentales del dominio:
 * **Clases Base**:
-  * [Entity.cs](file:///C:/Users/Usuario/Desktop/Universidad/U%20SEM5/Aplicaciones%20para%20el%20servidor%20Web/Practicas_Tareas/Tests/Api/Domain/Common/Entity.cs): Abstracción genérica para las entidades del dominio identificadas por un ID único.
-  * [ValueObject.cs](file:///C:/Users/Usuario/Desktop/Universidad/U%20SEM5/Aplicaciones%20para%20el%20servidor%20Web/Practicas_Tareas/Tests/Api/Domain/Common/ValueObject.cs): Abstracción genérica para garantizar igualdad basada en propiedades estructurales.
-* **Objetos de Valor**:
-  * [Email.cs](file:///C:/Users/Usuario/Desktop/Universidad/U%20SEM5/Aplicaciones%20para%20el%20servidor%20Web/Practicas_Tareas/Tests/Api/Domain/ValueObjects/Email.cs): Objeto de valor que representa una dirección de correo electrónico válida, aplicando reglas regex de formato y encapsulando la invariante del dominio.
+  * [Entity.cs](file:///C:/Users/Usuario/Desktop/Universidad/U%20SEM5/Aplicaciones%20para%20el%20servidor%20Web/Practicas_Tareas/Tests/Api/Domain/Common/Entity.cs): Abstracción genérica para las entidades del dominio, enfocada en el registro de cambios reutilizables (eventos de dominio) y con soporte para un ID único.
+  * *Nota: Se eliminó la clase base manual `ValueObject.cs` para delegar el modelado de los Objetos de Valor a la biblioteca generadora de código Vogen.*
+* **Objetos de Valor (Vogen)**:
+  * [Email.cs](file:///C:/Users/Usuario/Desktop/Universidad/U%20SEM5/Aplicaciones%20para%20el%20servidor%20Web/Practicas_Tareas/Tests/Api/Domain/ValueObjects/Email.cs): Objeto de valor fuertemente tipado generado automáticamente con Vogen. Encapsula las reglas regex para validar que el formato de correo electrónico sea correcto.
 * **Entidades**:
-  * [Usuario.cs](file:///C:/Users/Usuario/Desktop/Universidad/U%20SEM5/Aplicaciones%20para%20el%20servidor%20Web/Practicas_Tareas/Tests/Api/Domain/Entities/Usuario.cs): Entidad que representa a un usuario dentro del sistema, compuesta por su `Id`, `Nombre`, `Apellido` y el objeto de valor `Email`. Implementa validaciones integradas en su constructor y métodos de mutación controlados (`UpdateProfile`).
+  * [Usuario.cs](file:///C:/Users/Usuario/Desktop/Universidad/U%20SEM5/Aplicaciones%20para%20el%20servidor%20Web/Practicas_Tareas/Tests/Api/Domain/Entities/Usuario.cs): Entidad de dominio que representa al usuario, compuesta por `Id`, `Nombre`, `Apellido` y el objeto de valor struct `Email`. Contiene las validaciones de negocio en su constructor y métodos de actualización.
 
 ---
 

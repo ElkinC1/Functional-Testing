@@ -1,42 +1,28 @@
 using System.Text.RegularExpressions;
-using Api.Domain.Common;
+using Vogen;
 
 namespace Api.Domain.ValueObjects;
 
-public class Email : ValueObject
+[ValueObject<string>]
+public partial struct Email
 {
     private static readonly Regex EmailRegex = new(
         @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    public string Value { get; }
-
-    private Email(string value)
-    {
-        Value = value;
-    }
-
-    public static Email Create(string value)
+    private static Validation Validate(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new ArgumentException("El email no puede estar vacío.", nameof(value));
+            return Validation.Invalid("El email no puede estar vacío.");
         }
 
-        var trimmedValue = value.Trim();
-
-        if (!EmailRegex.IsMatch(trimmedValue))
+        var trimmed = value.Trim();
+        if (!EmailRegex.IsMatch(trimmed))
         {
-            throw new ArgumentException("El formato del email no es válido.", nameof(value));
+            return Validation.Invalid("El formato del email no es válido.");
         }
 
-        return new Email(trimmedValue);
+        return Validation.Ok;
     }
-
-    protected override IEnumerable<object> GetEqualityComponents()
-    {
-        yield return Value;
-    }
-
-    public override string ToString() => Value;
 }

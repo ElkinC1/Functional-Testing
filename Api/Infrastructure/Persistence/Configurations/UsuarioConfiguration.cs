@@ -21,5 +21,11 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
             .HasColumnName("Email")
             .IsRequired()
             .HasMaxLength(255);
+
+        builder.Property(u => u.IsDeleted)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.HasQueryFilter(u => !u.IsDeleted);
     }
 }

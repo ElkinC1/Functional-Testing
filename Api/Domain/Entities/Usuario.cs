@@ -38,4 +38,11 @@ public class Usuario : Entity<Guid>
         Apellido = apellido;
         Email = email;
     }
+
+    public bool IsDeleted { get; private set; }
+
+    public void Delete()
+    {
+        IsDeleted = true;
+    }
 }

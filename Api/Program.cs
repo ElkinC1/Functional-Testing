@@ -8,6 +8,8 @@ builder.AddSqlServerDbContext<ApplicationDbContext>("db");
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    cfg.AddOpenBehavior(typeof(Api.Application.Common.LoggingBehavior<,>));
+    cfg.AddOpenBehavior(typeof(Api.Application.Common.PerformanceBehavior<,>));
     cfg.AddOpenBehavior(typeof(Api.Application.Common.ValidationBehavior<,>));
 });
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);

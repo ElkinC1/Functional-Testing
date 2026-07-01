@@ -56,10 +56,28 @@ public class TestInitializer
             }
         }
 
-        _respawner = await Respawner.CreateAsync(
-            ConnectionString,
-            new RespawnerOptions { DbAdapter = DbAdapter.SqlServer }
-        );
+        var respawnerReady = false;
+        var respawnerRetries = 10;
+        while (!respawnerReady && respawnerRetries > 0)
+        {
+            try
+            {
+                _respawner = await Respawner.CreateAsync(
+                    ConnectionString,
+                    new RespawnerOptions { DbAdapter = DbAdapter.SqlServer }
+                );
+                respawnerReady = true;
+            }
+            catch (Exception)
+            {
+                await Task.Delay(1000);
+                respawnerRetries--;
+                if (respawnerRetries == 0)
+                {
+                    throw;
+                }
+            }
+        }
     }
 
     [OneTimeTearDown]
@@ -82,7 +100,21 @@ public class TestInitializer
     {
         if (_respawner != null)
         {
-            await _respawner.ResetAsync(ConnectionString);
+            var retries = 5;
+            while (retries > 0)
+            {
+                try
+                {
+                    await _respawner.ResetAsync(ConnectionString);
+                    break;
+                }
+                catch (Exception ex) when (ex.Message.Contains("connection") || ex is System.Net.Sockets.SocketException || ex is Microsoft.Data.SqlClient.SqlException)
+                {
+                    retries--;
+                    if (retries == 0) throw;
+                    await Task.Delay(500);
+                }
+            }
         }
     }
 }

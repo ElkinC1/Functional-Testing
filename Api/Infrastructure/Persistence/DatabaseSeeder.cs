@@ -16,20 +16,14 @@ public static class DatabaseSeeder
             return;
         }
 
-        var faker = new Faker<Usuario>("es")
-            .CustomInstantiator(f =>
-            {
-                var nombre = f.Name.FirstName();
-                var apellido = f.Name.LastName();
-                var emailStr = f.Internet.Email(nombre, apellido);
-                
-                return new Usuario(
-                    Guid.NewGuid(),
-                    nombre,
-                    apellido,
-                    Email.From(emailStr)
-                );
-            });
+        var faker = new Faker<Usuario>("es").CustomInstantiator(f =>
+        {
+            var nombre = f.Name.FirstName();
+            var apellido = f.Name.LastName();
+            var emailStr = f.Internet.Email(nombre, apellido);
+
+            return new Usuario(Guid.NewGuid(), nombre, apellido, Email.From(emailStr));
+        });
 
         var usuarios = faker.Generate(50);
 

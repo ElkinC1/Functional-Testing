@@ -11,18 +11,13 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
     {
         builder.HasKey(u => u.Id);
 
-        builder.Property(u => u.Nombre)
-            .IsRequired()
-            .HasMaxLength(100);
+        builder.Property(u => u.Nombre).IsRequired().HasMaxLength(100);
 
-        builder.Property(u => u.Apellido)
-            .IsRequired()
-            .HasMaxLength(100);
+        builder.Property(u => u.Apellido).IsRequired().HasMaxLength(100);
 
-        builder.Property(u => u.Email)
-            .HasConversion(
-                email => email.Value,
-                value => Email.From(value))
+        builder
+            .Property(u => u.Email)
+            .HasConversion(email => email.Value, value => Email.From(value))
             .HasColumnName("Email")
             .IsRequired()
             .HasMaxLength(255);

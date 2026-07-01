@@ -7,7 +7,9 @@ namespace Api.Controllers;
 public class UsuariosController : ApiControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<PagedResult<UsuarioDto>>> GetAll([FromQuery] GetUsuariosQuery query)
+    public async Task<ActionResult<PagedResult<UsuarioDto>>> GetAll(
+        [FromQuery] GetUsuariosQuery query
+    )
     {
         var usuarios = await Mediator.Send(query);
         return Ok(usuarios);

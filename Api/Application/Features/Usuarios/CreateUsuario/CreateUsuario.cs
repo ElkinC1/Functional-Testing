@@ -27,7 +27,18 @@ public class CreateUsuarioCommandValidator : AbstractValidator<CreateUsuarioComm
         RuleFor(x => x.Email)
             .NotEmpty()
             .WithMessage("El email no puede estar vacío.")
-            .EmailAddress()
+            .Must(email =>
+            {
+                try
+                {
+                    _ = Email.From(email);
+                    return true;
+                }
+                catch (Vogen.ValueObjectValidationException)
+                {
+                    return false;
+                }
+            })
             .WithMessage("El formato del email no es válido.");
     }
 }

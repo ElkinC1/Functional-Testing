@@ -1,15 +1,17 @@
-﻿namespace Api.Tests;
+using Api.Tests.Infrastructure;
+using Aspire.Hosting;
+using Aspire.Hosting.Testing;
+using Shouldly;
+
+namespace Api.Tests;
 
 public class Tests
 {
-    [SetUp]
-    public void Setup()
-    {
-    }
-
     [Test]
-    public void Test1()
+    public async Task TestConnectionString()
     {
-        Assert.Pass();
+        var appHost = TestInitializer.AppHost.ShouldNotBeNull();
+        var connStr = await appHost.GetConnectionStringAsync("db");
+        connStr.ShouldNotBeNullOrEmpty();
     }
 }

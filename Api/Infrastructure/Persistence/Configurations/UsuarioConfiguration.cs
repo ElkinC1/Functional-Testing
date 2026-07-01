@@ -19,7 +19,6 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
             .IsRequired()
             .HasMaxLength(100);
 
-        // Mapeo del Objeto de Valor Email a una sola columna
         builder.Property(u => u.Email)
             .HasConversion(
                 email => email.Value,

@@ -3,22 +3,20 @@ using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-// Registrar DbContext con SQL Server provisto por Aspire (referencia "db")
 builder.AddSqlServerDbContext<ApplicationDbContext>("db");
 
-// Registrar MediatR y FluentValidation
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+builder.Services.AddMediatR(cfg => 
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    cfg.AddOpenBehavior(typeof(Api.Application.Common.ValidationBehavior<,>));
+});
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Inicializar y sembrar la base de datos en Desarrollo
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -37,3 +35,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

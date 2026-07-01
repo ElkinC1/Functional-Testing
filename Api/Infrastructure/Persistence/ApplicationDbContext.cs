@@ -6,9 +6,7 @@ namespace Api.Infrastructure.Persistence;
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
-    }
+        : base(options) { }
 
     public DbSet<Usuario> Usuarios => Set<Usuario>();
 
